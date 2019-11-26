@@ -1,5 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:yhinmall/utility/my_style.dart';
+import 'package:yhinmall/utility/normal_dialog.dart';
 
 class Register extends StatefulWidget {
   @override
@@ -82,8 +84,36 @@ class _RegisterState extends State<Register> {
       onPressed: () {
         formKey.currentState.save();
         print('name = $name, email = $email, password = $password');
+        registerThread();
       },
     );
+  }
+
+  Future<void> registerThread() async {
+    FirebaseAuth firebaseAuth = FirebaseAuth.instance;
+    await firebaseAuth
+        .createUserWithEmailAndPassword(email: email, password: password)
+        .then((response) {
+      print('Register Success');
+      setupDisplayName();
+    }).catchError((response) {
+      String title = response.code;
+      String message = response.message;
+      print('title = $title, message = $message');
+      normalDialog(context, title, message);
+    });
+  }
+
+  Future<void> setupDisplayName()async{
+
+    FirebaseAuth firebaseAuth = FirebaseAuth.instance;
+    FirebaseUser firebaseUser = await firebaseAuth.currentUser();
+    UserUpdateInfo userUpdateInfo = UserUpdateInfo();
+    userUpdateInfo.displayName = name;
+    firebaseUser.updateProfile(userUpdateInfo);
+
+    Navigator.of(context).pop();
+
   }
 
   @override
